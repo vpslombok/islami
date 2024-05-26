@@ -138,10 +138,10 @@
                 <p id="lokasi-text" class="text-lg"></p>
                 <div id="map"></div>
 <!-- Tambahkan elemen audio untuk Al-Fatihah -->
-                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3" autoplay></audio>
+                <audio id="audio" src="https://yourdomain.com/alfatihah.mp3"></audio>
                 <!-- Tambahkan teks jawaban otomatis -->
                 <p id="reply" class="text-lg">Alhamdulillah, semoga Allah memberkahi kita semua.</p>
-                <footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer>
+                <footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer
             </div>
         </div>
     </div>
@@ -272,9 +272,11 @@
         initialize();
     </script>
 <script>
-    <script>
-        // JavaScript untuk memainkan suara Al-Fatihah
-        document.getElementById('audio').play();
+        // Function to play audio automatically
+        document.addEventListener("DOMContentLoaded", function() {
+            var audio = document.getElementById('audio');
+            audio.play();
+        });
 
         // Fungsi untuk menambahkan jawaban otomatis setelah beberapa detik
         setTimeout(function() {
