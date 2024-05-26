@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waktu Sholat Lombok</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://vpslombok.github.io/audio/foto/background.jpg');
+            background-size: cover;
+            background-position: center;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: auto; /* Menambahkan scrolling jika konten melebihi tinggi viewport */
+        }
+
+        .container {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .waktu {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .waktu h2 {
+            margin: 0;
+            color: #ffcc00;
+            font-size: 1.2rem;
+        }
+
+        .waktu p {
+            margin: 5px 0 0;
+            font-size: 1rem;
+        }
+
+        #map {
+            height: 200px; /* Menyesuaikan tinggi peta */
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        @keyframes blink {
+            0% { color: #fff; }
+            50% { color: #ffcc00; }
+            100% { color: #fff; }
+        }
+
+        .blink {
+            animation: blink 1s infinite;
+        }
+
+        /* Tambahan untuk tampilan ponsel */
+        @media (max-width: 767px) {
+            .container {
+                width: 100%; /* Konten utama mengisi seluruh lebar layar */
+                border-radius: 0; /* Menghilangkan border-radius */
+                padding: 10px; /* Mengurangi padding */
+            }
+
+            .waktu {
+                padding: 10px; /* Padding yang lebih kecil untuk waktu sholat */
+                margin-bottom: 8px; /* Margin yang lebih kecil antara waktu sholat */
+            }
+
+            .waktu h2 {
+                font-size: 1rem; /* Ukuran font yang lebih kecil untuk judul waktu sholat */
+            }
+
+            #map {
+                height: 150px; /* Tinggi peta yang lebih kecil untuk tampilan ponsel */
+                margin-top: 8px; /* Margin yang lebih kecil di atas peta */
+            }
+
+            table {
+                font-size: 0.8rem; /* Ukuran font tabel yang lebih kecil */
+            }
+
+            th, td {
+                padding: 5px; /* Padding yang lebih kecil untuk sel tabel */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-2xl font-bold mb-4 text-center">Waktu Sholat di Pulau Lombok</h1>
+        <div id="waktu-sholat" class="grid grid-cols-1 gap-4">
+            <table>
+                <tr>
+                    <th>Waktu Sholat</th>
+                    <th>Jam</th>
+                    <th>Sisa Waktu</th>
+                </tr>
+                <tr>
+                    <td>Subuh</td>
+                    <td id="subuh-time"></td>
+                    <td id="subuh-countdown" class="text-sm blink"></td>
+                </tr>
+                <tr>
+                    <td>Dzuhur</td>
+                    <td id="dzuhur-time"></td>
+                    <td id="dzuhur-countdown" class="text-sm"></td>
+                </tr>
+                <tr>
+                    <td>Ashar</td>
+                    <td id="ashar-time"></td>
+                    <td id="ashar-countdown" class="text-sm"></td>
+                </tr>
+                <tr>
+                    <td>Maghrib</td>
+                    <td id="maghrib-time"></td>
+                    <td id="maghrib-countdown" class="text-sm"></td>
+                </tr>
+                <tr>
+                    <td>Isya</td>
+                    <td id="isya-time"></td>
+                    <td id="isya-countdown" class="text-sm"></td>
+                </tr>
+            </table>
+            <div class="waktu" id="lokasi">
+                <h2>Lokasi Anda</h2>
+                <p id="lokasi-text" class="text-lg"></p>
+                <div id="map"></div>
+<footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer>
+            </div>
+        </div>
+    </div>
+                    
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        async function fetchPrayerTimes() {
+            const response = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Mataram&country=Indonesia&method=2');
+            const data = await response.json();
+            const timings = data.data.timings;
+
+            return {
+                fajr: timings.Fajr,
+                dhuhr: timings.Dhuhr,
+                asr: timings.Asr,
+                maghrib: timings.Maghrib,
+                isha: timings.Isha
+            };
+        }
+
+        function updatePrayerTimes(prayerTimes) {
+            document.getElementById('subuh-time').innerText = prayerTimes.fajr;
+            document.getElementById('dzuhur-time').innerText = prayerTimes.dhuhr;
+            document.getElementById('ashar-time').innerText = prayerTimes.asr;
+            document.getElementById('maghrib-time').innerText = prayerTimes.maghrib;
+            document.getElementById('isya-time').innerText = prayerTimes.isha;
+        }
+
+        function getTimeRemaining(prayerTime) {
+            const now = new Date();
+            const timeParts = prayerTime.split(':');
+            const prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeParts[0], timeParts[1]);
+
+            if (now > prayerDate) {
+                prayerDate.setDate(prayerDate.getDate() + 1);
+            }
+
+            const total = prayerDate - now;
+            const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((total / 1000 / 60) % 60);
+            const seconds = Math.floor((total / 1000) % 60);
+
+            return {
+                total,
+                hours,
+                minutes,
+                seconds
+            };
+        }
+
+        function updateCountdown(prayerTimes) {
+            const subuhCountdown = getTimeRemaining(prayerTimes.fajr);
+            document.getElementById('subuh-countdown').innerText = `${subuhCountdown.hours} jam ${subuhCountdown.minutes} menit ${subuhCountdown.seconds} detik`;
+
+            const dzuhurCountdown = getTimeRemaining(prayerTimes.dhuhr);
+            document.getElementById('dzuhur-countdown').innerText = `${dzuhurCountdown.hours} jam ${dzuhurCountdown.minutes} menit ${dzuhurCountdown.seconds} detik`;
+
+            const asharCountdown = getTimeRemaining(prayerTimes.asr);
+            document.getElementById('ashar-countdown').innerText = `${asharCountdown.hours} jam ${asharCountdown.minutes} menit ${asharCountdown.seconds} detik`;
+
+            const maghribCountdown = getTimeRemaining(prayerTimes.maghrib);
+            document.getElementById('maghrib-countdown').innerText = `${maghribCountdown.hours} jam ${maghribCountdown.minutes} menit ${maghribCountdown.seconds} detik`;
+
+            const isyaCountdown = getTimeRemaining(prayerTimes.isha);
+            document.getElementById('isya-countdown').innerText = `${isyaCountdown.hours} jam ${isyaCountdown.minutes} menit ${isyaCountdown.seconds} detik`;
+        }
+
+        async function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById('lokasi-text').innerText = "Geolocation tidak didukung oleh browser Anda.";
+            }
+        }
+
+        async function showPosition(position) {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            const locationName = await getLocationName(latitude, longitude);
+            document.getElementById('lokasi-text').innerText = locationName;
+            showMap(latitude, longitude);
+        }
+
+        async function getLocationName(latitude, longitude) {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            return data.display_name || `Latitude: ${latitude}, Longitude: ${longitude}`;
+        }
+
+        function showMap(latitude, longitude) {
+            const map = L.map('map').setView([latitude, longitude], 13);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            L.marker([latitude, longitude]).addTo(map)
+                .bindPopup('Lokasi Anda')
+                .openPopup();
+        }
+
+        function showError(error) {
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById('lokasi-text').innerText = "Pengguna menolak permintaan geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById('lokasi-text').innerText = "Informasi lokasi tidak tersedia.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById('lokasi-text').innerText = "Permintaan untuk mendapatkan lokasi pengguna timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
+                    break;
+            }
+        }
+
+        async function initialize() {
+            const prayerTimes = await fetchPrayerTimes();
+            updatePrayerTimes(prayerTimes);
+            updateCountdown(prayerTimes);
+            getLocation();
+            setInterval(() => {
+                updateCountdown(prayerTimes);
+            }, 1000);
+        }
+        initialize();
+    </script>
+</body>
+  </html>
+      
