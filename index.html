@@ -18,7 +18,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: auto; /* Menambahkan scrolling jika konten melebihi tinggi viewport */
+            overflow: auto;
         }
 
         .container {
@@ -50,7 +50,7 @@
         }
 
         #map {
-            height: 200px; /* Menyesuaikan tinggi peta */
+            height: 200px;
             border-radius: 5px;
             margin-top: 10px;
         }
@@ -65,35 +65,39 @@
             animation: blink 1s infinite;
         }
 
-        /* Tambahan untuk tampilan ponsel */
         @media (max-width: 767px) {
             .container {
-                width: 100%; /* Konten utama mengisi seluruh lebar layar */
-                border-radius: 0; /* Menghilangkan border-radius */
-                padding: 10px; /* Mengurangi padding */
+                width: 100%;
+                border-radius: 0;
+                padding: 10px;
             }
 
             .waktu {
-                padding: 10px; /* Padding yang lebih kecil untuk waktu sholat */
-                margin-bottom: 8px; /* Margin yang lebih kecil antara waktu sholat */
+                padding: 10px;
+                margin-bottom: 8px;
             }
 
             .waktu h2 {
-                font-size: 1rem; /* Ukuran font yang lebih kecil untuk judul waktu sholat */
+                font-size: 1rem;
             }
 
             #map {
-                height: 150px; /* Tinggi peta yang lebih kecil untuk tampilan ponsel */
-                margin-top: 8px; /* Margin yang lebih kecil di atas peta */
+                height: 150px;
+                margin-top: 8px;
             }
 
             table {
-                font-size: 0.8rem; /* Ukuran font tabel yang lebih kecil */
+                font-size: 0.8rem;
             }
 
             th, td {
-                padding: 5px; /* Padding yang lebih kecil untuk sel tabel */
+                padding: 5px;
             }
+        }
+
+        .audio-controls {
+            margin-top: 20px;
+            text-align: center;
         }
     </style>
 </head>
@@ -137,9 +141,10 @@
                 <h2>Lokasi Anda</h2>
                 <p id="lokasi-text" class="text-lg"></p>
                 <div id="map"></div>
-<!-- Tambahkan elemen audio untuk Al-Fatihah -->
-                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3" muted></audio>
-                <!-- Tambahkan teks jawaban otomatis -->
+                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3"></audio>
+                <div class="audio-controls">
+                    <button id="play-button" class="px-4 py-2 bg-yellow-500 text-white rounded">Play Audio</button>
+                </div>
                 <p id="reply" class="text-lg">Alhamdulillah, semoga Allah memberkahi kita semua.</p>
                 <footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer>
             </div>
@@ -172,8 +177,7 @@
 
         function getTimeRemaining(prayerTime) {
             const now = new Date();
-            const timeParts = prayerTime
-            .split(':');
+            const timeParts = prayerTime.split(':');
             const prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeParts[0], timeParts[1]);
 
             if (now > prayerDate) {
@@ -270,10 +274,8 @@
                 updateCountdown(prayerTimes);
             }, 1000);
         }
-        initialize();
-    </script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
+
+        document.getElementById('play-button').addEventListener('click', function() {
             var audio = document.getElementById('audio');
             audio.play().then(() => {
                 audio.muted = false;
@@ -282,9 +284,7 @@
             });
         });
 
-        setTimeout(function() {
-            document.getElementById('reply').innerText = "Jangan Lupa Sholat kawan.";
-        }, 5000);
+        initialize();
     </script>
 </body>
 </html>
