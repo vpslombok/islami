@@ -203,21 +203,60 @@
         }
 
         function updateCountdown(prayerTimes) {
-            const subuhCountdown = getTimeRemaining(prayerTimes.fajr);
-            document.getElementById('subuh-countdown').innerText = `${subuhCountdown.hours} jam ${subuhCountdown.minutes} menit ${subuhCountdown.seconds} detik`;
+    // Mendapatkan sisa waktu untuk setiap waktu sholat
+    const subuhCountdown = getTimeRemaining(prayerTimes.fajr);
+    const dzuhurCountdown = getTimeRemaining(prayerTimes.dhuhr);
+    const asharCountdown = getTimeRemaining(prayerTimes.asr);
+    const maghribCountdown = getTimeRemaining(prayerTimes.maghrib);
+    const isyaCountdown = getTimeRemaining(prayerTimes.isha);
 
-            const dzuhurCountdown = getTimeRemaining(prayerTimes.dhuhr);
-            document.getElementById('dzuhur-countdown').innerText = `${dzuhurCountdown.hours} jam ${dzuhurCountdown.minutes} menit ${dzuhurCountdown.seconds} detik`;
+    // Mendapatkan elemen countdown untuk setiap waktu sholat
+    const subuhCountdownElem = document.getElementById('subuh-countdown');
+    const dzuhurCountdownElem = document.getElementById('dzuhur-countdown');
+    const asharCountdownElem = document.getElementById('ashar-countdown');
+    const maghribCountdownElem = document.getElementById('maghrib-countdown');
+    const isyaCountdownElem = document.getElementById('isya-countdown');
 
-            const asharCountdown = getTimeRemaining(prayerTimes.asr);
-            document.getElementById('ashar-countdown').innerText = `${asharCountdown.hours} jam ${asharCountdown.minutes} menit ${asharCountdown.seconds} detik`;
+    // Memperbarui teks countdown untuk setiap waktu sholat
+    subuhCountdownElem.innerText = formatCountdown(subuhCountdown);
+    dzuhurCountdownElem.innerText = formatCountdown(dzuhurCountdown);
+    asharCountdownElem.innerText = formatCountdown(asharCountdown);
+    maghribCountdownElem.innerText = formatCountdown(maghribCountdown);
+    isyaCountdownElem.innerText = formatCountdown(isyaCountdown);
 
-            const maghribCountdown = getTimeRemaining(prayerTimes.maghrib);
-            document.getElementById('maghrib-countdown').innerText = `${maghribCountdown.hours} jam ${maghribCountdown.minutes} menit ${maghribCountdown.seconds} detik`;
+    // Mendapatkan detik terkecil dari semua waktu sholat
+    const minSeconds = Math.min(
+        subuhCountdown.seconds,
+        dzuhurCountdown.seconds,
+        asharCountdown.seconds,
+        maghribCountdown.seconds,
+        isyaCountdown.seconds
+    );
 
-            const isyaCountdown = getTimeRemaining(prayerTimes.isha);
-            document.getElementById('isya-countdown').innerText = `${isyaCountdown.hours} jam ${isyaCountdown.minutes} menit ${isyaCountdown.seconds} detik`;
-        }
+    // Menghapus kelas blink dari semua elemen countdown
+    subuhCountdownElem.classList.remove('blink-active');
+    dzuhurCountdownElem.classList.remove('blink-active');
+    asharCountdownElem.classList.remove('blink-active');
+    maghribCountdownElem.classList.remove('blink-active');
+    isyaCountdownElem.classList.remove('blink-active');
+
+    // Menambahkan kelas blink hanya pada elemen countdown yang memiliki detik terkecil
+    if (subuhCountdown.seconds === minSeconds) {
+        subuhCountdownElem.classList.add('blink-active');
+    }
+    if (dzuhurCountdown.seconds === minSeconds) {
+        dzuhurCountdownElem.classList.add('blink-active');
+    }
+    if (asharCountdown.seconds === minSeconds) {
+        asharCountdownElem.classList.add('blink-active');
+    }
+    if (maghribCountdown.seconds === minSeconds) {
+        maghribCountdownElem.classList.add('blink-active');
+    }
+    if (isyaCountdown.seconds === minSeconds) {
+        isyaCountdownElem.classList.add('blink-active');
+    }
+}
 
         async function getLocation() {
             if (navigator.geolocation) {
