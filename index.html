@@ -273,10 +273,20 @@
             setInterval(() => {
                 updateCountdown(prayerTimes);
             }, 1000);
+
+            const audio = document.getElementById('audio');
+            setInterval(async () => {
+                try {
+                    await audio.play();
+                    clearInterval(this);
+                } catch (error) {
+                    console.log('Auto-play was prevented. Retrying...');
+                }
+            }, 1000);
         }
 
         document.getElementById('play-button').addEventListener('click', function() {
-            var audio = document.getElementById('audio');
+            const audio = document.getElementById('audio');
             audio.play().then(() => {
                 audio.muted = false;
             }).catch(error => {
