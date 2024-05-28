@@ -18,7 +18,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            overflow: auto;
+            overflow: auto; /* Menambahkan scrolling jika konten melebihi tinggi viewport */
         }
 
         .container {
@@ -50,59 +50,54 @@
         }
 
         #map {
-            height: 200px;
+            height: 200px; /* Menyesuaikan tinggi peta */
             border-radius: 5px;
             margin-top: 10px;
         }
 
-        /* Animasi kedipan */
-    @keyframes blink {
-        0% { color: #fff; }
-        50% { color: #ffcc00; }
-        100% { color: #fff; }
-    }
+        @keyframes blink {
+            0% { color: #fff; }
+            50% { color: #ffcc00; }
+            100% { color: #fff; }
+        }
 
-    .blink {
-        animation: none; /* Inisialisasi tanpa animasi */
-    }
+        .blink {
+            animation: none; /* Inisialisasi tanpa animasi */
+        }
 
-    .blink-active {
-        animation: blink 1s infinite; /* Terapkan animasi jika detiknya 0 */
-    }
+        .blink-active {
+            animation: blink 1s infinite; /* Terapkan animasi jika jamnya paling kecil */
+        }
 
+        /* Tambahan untuk tampilan ponsel */
         @media (max-width: 767px) {
             .container {
-                width: 100%;
-                border-radius: 0;
-                padding: 10px;
+                width: 100%; /* Konten utama mengisi seluruh lebar layar */
+                border-radius: 0; /* Menghilangkan border-radius */
+                padding: 10px; /* Mengurangi padding */
             }
 
             .waktu {
-                padding: 10px;
-                margin-bottom: 8px;
+                padding: 10px; /* Padding yang lebih kecil untuk waktu sholat */
+                margin-bottom: 8px; /* Margin yang lebih kecil antara waktu sholat */
             }
 
             .waktu h2 {
-                font-size: 1rem;
+                font-size: 1rem; /* Ukuran font yang lebih kecil untuk judul waktu sholat */
             }
 
             #map {
-                height: 150px;
-                margin-top: 8px;
+                height: 150px; /* Tinggi peta yang lebih kecil untuk tampilan ponsel */
+                margin-top: 8px; /* Margin yang lebih kecil di atas peta */
             }
 
             table {
-                font-size: 0.8rem;
+                font-size: 0.8rem; /* Ukuran font tabel yang lebih kecil */
             }
 
             th, td {
-                padding: 5px;
+                padding: 5px; /* Padding yang lebih kecil untuk sel tabel */
             }
-        }
-
-        .audio-controls {
-            margin-top: 20px;
-            text-align: center;
         }
     </style>
 </head>
@@ -119,7 +114,7 @@
                 <tr>
                     <td>Subuh</td>
                     <td id="subuh-time"></td>
-                    <td id="subuh-countdown" class="text-sm blink"></td>
+                    <td id="subuh-countdown" class="text-sm"></td>
                 </tr>
                 <tr>
                     <td>Dzuhur</td>
@@ -146,10 +141,7 @@
                 <h2>Lokasi Anda</h2>
                 <p id="lokasi-text" class="text-lg"></p>
                 <div id="map"></div>
-                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3"></audio>
-                <div class="audio-controls">
-                    <button id="play-button" class="px-4 py-2 bg-yellow-500 text-white rounded">Play Audio</button>
-                </div>
+                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3" autoplay></audio>
                 <p id="reply" class="text-lg">Alhamdulillah, semoga Allah memberkahi kita semua.</p>
                 <footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer>
             </div>
@@ -158,51 +150,60 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script>
-        async function fetchPrayerTimes() {
-            const response = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Mataram&country=Indonesia&method=2');
-            const data = await response.json();
-            const timings = data.data.timings;
+        // Fungsi untuk mendapatkan data waktu sholat dari API
+async function fetchPrayerTimes() {
+    const response = await fetch('https://api.aladhan.com/v1/timingsByCity?city=Mataram&country=Indonesia&method=2');
+    const data = await response.json();
+    const timings = data.data.timings;
 
-            return {
-                fajr: timings.Fajr,
-                dhuhr: timings.Dhuhr,
-                asr: timings.Asr,
-                maghrib: timings.Maghrib,
-                isha: timings.Isha
-            };
-        }
+    return {
+        fajr: timings.Fajr,
+        dhuhr: timings.Dhuhr,
+        asr: timings.Asr,
+        maghrib: timings.Maghrib,
+        isha: timings.Isha
+    };
+}
 
-        function updatePrayerTimes(prayerTimes) {
-            document.getElementById('subuh-time').innerText = prayerTimes.fajr;
-            document.getElementById('dzuhur-time').innerText = prayerTimes.dhuhr;
-            document.getElementById('ashar-time').innerText = prayerTimes.asr;
-            document.getElementById('maghrib-time').innerText = prayerTimes.maghrib;
-            document.getElementById('isya-time').innerText = prayerTimes.isha;
-        }
+// Fungsi untuk memperbarui teks waktu sholat
+function updatePrayerTimes(prayerTimes) {
+    document.getElementById('subuh-time').innerText = prayerTimes.fajr;
+    document.getElementById('dzuhur-time').innerText = prayerTimes.dhuhr;
+    document.getElementById('ashar-time').innerText = prayerTimes.asr;
+    document.getElementById('maghrib-time').innerText = prayerTimes.maghrib;
+    document.getElementById('isya-time').innerText = prayerTimes.isha;
+}
 
-        function getTimeRemaining(prayerTime) {
-            const now = new Date();
-            const timeParts = prayerTime.split(':');
-            const prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeParts[0], timeParts[1]);
+// Fungsi untuk mendapatkan sisa waktu dari waktu sholat yang diberikan
+function getTimeRemaining(prayerTime) {
+    const now = new Date();
+    const timeParts = prayerTime.split(':');
+    const prayerDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), timeParts[0], timeParts[1]);
 
-            if (now > prayerDate) {
-                prayerDate.setDate(prayerDate.getDate() + 1);
-            }
+    if (now > prayerDate) {
+        prayerDate.setDate(prayerDate.getDate() + 1);
+    }
 
-            const total = prayerDate - now;
-            const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((total / 1000 / 60) % 60);
-            const seconds = Math.floor((total / 1000) % 60);
+    const total = prayerDate - now;
+    const hours = Math.floor((total / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((total / 1000 / 60) % 60);
+    const seconds = Math.floor((total / 1000) % 60);
 
-            return {
-                total,
-                hours,
-                minutes,
-                seconds
-            };
-        }
+    return {
+        total,
+        hours,
+        minutes,
+        seconds
+    };
+}
 
-        function updateCountdown(prayerTimes) {
+// Fungsi untuk memformat sisa waktu menjadi string
+function formatCountdown(countdown) {
+    return `${countdown.hours} jam ${countdown.minutes} menit ${countdown.seconds} detik`;
+}
+
+// Fungsi untuk memperbarui tampilan sisa waktu untuk setiap waktu sholat
+function updateCountdown(prayerTimes) {
     // Mendapatkan sisa waktu untuk setiap waktu sholat
     const subuhCountdown = getTimeRemaining(prayerTimes.fajr);
     const dzuhurCountdown = getTimeRemaining(prayerTimes.dhuhr);
@@ -224,13 +225,13 @@
     maghribCountdownElem.innerText = formatCountdown(maghribCountdown);
     isyaCountdownElem.innerText = formatCountdown(isyaCountdown);
 
-    // Mendapatkan detik terkecil dari semua waktu sholat
-    const minSeconds = Math.min(
-        subuhCountdown.seconds,
-        dzuhurCountdown.seconds,
-        asharCountdown.seconds,
-        maghribCountdown.seconds,
-        isyaCountdown.seconds
+    // Mendapatkan jam terkecil dari semua waktu sholat
+    const minHours = Math.min(
+        subuhCountdown.hours,
+        dzuhurCountdown.hours,
+        asharCountdown.hours,
+        maghribCountdown.hours,
+        isyaCountdown.hours
     );
 
     // Menghapus kelas blink dari semua elemen countdown
@@ -240,105 +241,96 @@
     maghribCountdownElem.classList.remove('blink-active');
     isyaCountdownElem.classList.remove('blink-active');
 
-    // Menambahkan kelas blink hanya pada elemen countdown yang memiliki detik terkecil
-    if (subuhCountdown.seconds === minSeconds) {
+    // Menambahkan kelas blink hanya pada elemen countdown yang memiliki jam terkecil
+    if (subuhCountdown.hours === minHours) {
         subuhCountdownElem.classList.add('blink-active');
     }
-    if (dzuhurCountdown.seconds === minSeconds) {
+    if (dzuhurCountdown.hours === minHours) {
         dzuhurCountdownElem.classList.add('blink-active');
     }
-    if (asharCountdown.seconds === minSeconds) {
+    if (asharCountdown.hours === minHours) {
         asharCountdownElem.classList.add('blink-active');
     }
-    if (maghribCountdown.seconds === minSeconds) {
+    if (maghribCountdown.hours === minHours) {
         maghribCountdownElem.classList.add('blink-active');
     }
-    if (isyaCountdown.seconds === minSeconds) {
+    if (isyaCountdown.hours === minHours) {
         isyaCountdownElem.classList.add('blink-active');
     }
 }
 
-        async function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
-                document.getElementById('lokasi-text').innerText = "Geolocation tidak didukung oleh browser Anda.";
-            }
-        }
+// Fungsi untuk mendapatkan lokasi pengguna
+async function getLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        document.getElementById('lokasi-text').innerText = "Geolocation tidak didukung oleh browser Anda.";
+    }
+}
 
-        async function showPosition(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const locationName = await getLocationName(latitude, longitude);
-            document.getElementById('lokasi-text').innerText = locationName;
-            showMap(latitude, longitude);
-        }
+// Fungsi untuk menampilkan lokasi pengguna pada peta
+async function showPosition(position) {
+    const latitude = position.coords.latitude;
+    const longitude = position.coords.longitude;
+    const locationName = await getLocationName(latitude, longitude);
+    document.getElementById('lokasi-text').innerText = locationName;
+    showMap(latitude, longitude);
+}
 
-        async function getLocationName(latitude, longitude) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
-            const data = await response.json();
-            return data.display_name || `Latitude: ${latitude}, Longitude: ${longitude}`;
-        }
+// Fungsi untuk mendapatkan nama lokasi berdasarkan koordinat
+async function getLocationName(latitude, longitude) {
+    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+    const data = await response.json();
+    return data.display_name || `Latitude: ${latitude}, Longitude: ${longitude}`;
+}
 
-        function showMap(latitude, longitude) {
-            const map = L.map('map').setView([latitude, longitude], 13);
+// Fungsi untuk menampilkan peta
+function showMap(latitude, longitude) {
+    const map = L.map('map').setView([latitude, longitude], 13);
 
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
 
-            L.marker([latitude, longitude]).addTo(map)
-                .bindPopup('Lokasi Anda')
-                .openPopup();
-        }
+    L.marker([latitude, longitude]).addTo(map)
+        .bindPopup('Lokasi Anda')
+        .openPopup();
+}
 
-        function showError(error) {
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById('lokasi-text').innerText = "Pengguna menolak permintaan geolocation.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById('lokasi-text').innerText = "Informasi lokasi tidak tersedia.";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById('lokasi-text').innerText = "Permintaan untuk mendapatkan lokasi pengguna timed out.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
-                    break;
-            }
-        }
+// Fungsi untuk menangani kesalahan geolocation
+function showError(error) {
+    switch (error.code) {
+        case error.PERMISSION_DENIED:
+            document.getElementById('lokasi-text').innerText = "Pengguna menolak permintaan geolocation.";
+            break;
+        case error.POSITION_UNAVAILABLE:
+            document
+.getElementById('lokasi-text').innerText = "Informasi lokasi tidak tersedia.";
+            break;
+        case error.TIMEOUT:
+            document.getElementById('lokasi-text').innerText = "Permintaan untuk mendapatkan lokasi pengguna timed out.";
+            break;
+        case error.UNKNOWN_ERROR:
+            document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
+            break;
+        default:
+            document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
+            break;
+    }
+}
 
-        async function initialize() {
-            const prayerTimes = await fetchPrayerTimes();
-            updatePrayerTimes(prayerTimes);
-            updateCountdown(prayerTimes);
-            getLocation();
-            setInterval(() => {
-                updateCountdown(prayerTimes);
-            }, 1000);
+// Fungsi utama untuk memperbarui waktu sholat dan sisa waktu
+async function updatePrayerAndCountdown() {
+    const prayerTimes = await fetchPrayerTimes();
+    updatePrayerTimes(prayerTimes);
+    updateCountdown(prayerTimes);
+}
 
-            const audio = document.getElementById('audio');
-            setInterval(async () => {
-                try {
-                    await audio.play();
-                    clearInterval(this);
-                } catch (error) {
-                    console.log('Auto-play was prevented. Retrying...');
-                }
-            }, 1000);
-        }
+// Memperbarui waktu sholat dan sisa waktu setiap detik
+setInterval(updatePrayerAndCountdown, 1000);
 
-        document.getElementById('play-button').addEventListener('click', function() {
-            const audio = document.getElementById('audio');
-            audio.play().then(() => {
-                audio.muted = false;
-            }).catch(error => {
-                console.log('Error attempting to play audio:', error);
-            });
-        });
-
-        initialize();
-    </script>
+// Memperbarui lokasi pengguna saat halaman dimuat
+getLocation();
+</script>
 </body>
 </html>
