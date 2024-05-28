@@ -55,15 +55,20 @@
             margin-top: 10px;
         }
 
-        @keyframes blink {
-            0% { color: #fff; }
-            50% { color: #ffcc00; }
-            100% { color: #fff; }
-        }
+        /* Animasi kedipan */
+    @keyframes blink {
+        0% { color: #fff; }
+        50% { color: #ffcc00; }
+        100% { color: #fff; }
+    }
 
-        .blink {
-            animation: blink 1s infinite;
-        }
+    .blink {
+        animation: none; /* Inisialisasi tanpa animasi */
+    }
+
+    .blink-active {
+        animation: blink 1s infinite; /* Terapkan animasi jika detiknya 0 */
+    }
 
         @media (max-width: 767px) {
             .container {
