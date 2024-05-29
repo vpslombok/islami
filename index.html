@@ -140,7 +140,7 @@
                 <h2>Lokasi Anda</h2>
                 <p id="lokasi-text" class="text-lg"></p>
                 <div id="map"></div>
-                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3" autoplay></audio>
+                <audio id="audio" src="https://vpslombok.github.io/audio/alfatihah.mp3"></audio>
                 <p id="reply" class="text-lg">Alhamdulillah, semoga Allah memberkahi kita semua.</p>
                 <footer style="text-align: center; margin-top: 20px;">&copy; 2024 Bayu Pratama</footer>
             </div>
@@ -232,84 +232,38 @@
 
             if (subuhCountdown.hours === minHours) {
                 subuhCountdownElem.classList.add('blink-active');
-            }
-            if (dzuhurCountdown.hours === minHours) {
+            } else if (dzuhurCountdown.hours === minHours) {
                 dzuhurCountdownElem.classList.add('blink-active');
-            }
-            if (asharCountdown.hours === minHours) {
+            } else if (asharCountdown.hours === minHours) {
                 asharCountdownElem.classList.add('blink-active');
-            }
-            if (maghribCountdown.hours === minHours) {
+            } else if (maghribCountdown.hours === minHours) {
                 maghribCountdownElem.classList.add('blink-active');
-            }
-            if (isyaCountdown.hours === minHours) {
+            } else if (isyaCountdown.hours === minHours) {
                 isyaCountdownElem.classList.add('blink-active');
             }
         }
 
-        async function getLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(showPosition, showError);
-            } else {
-                document.getElementById('lokasi-text').innerText = "Geolocation tidak didukung oleh browser Anda.";
-            }
+        function playAudio() {
+            const audio = document.getElementById('audio');
+            audio.play();
         }
 
-        async function showPosition(position) {
-            const latitude = position.coords.latitude;
-            const longitude = position.coords.longitude;
-            const locationName = await getLocationName(latitude, longitude);
-            document.getElementById('lokasi-text').innerText = locationName;
-            showMap(latitude, longitude);
-        }
+        document.addEventListener('click', function () {
+            const audio = document.getElementById('audio');
+            audio.play();
+        });
 
-        async function getLocationName(latitude, longitude) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
-            const data = await response.json();
-            return data.display_name || `Latitude: ${latitude}, Longitude: ${longitude}`;
-        }
-
-        function showMap(latitude, longitude) {
-            const map = L.map('map').setView([latitude, longitude], 13);
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            }).addTo(map);
-
-            L.marker([latitude, longitude]).addTo(map)
-                .bindPopup('Lokasi Anda')
-                .openPopup();
-        }
-
-        function showError(error) {
-            switch (error.code) {
-                case error.PERMISSION_DENIED:
-                    document.getElementById('lokasi-text').innerText = "Pengguna menolak permintaan geolocation.";
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    document.getElementById('lokasi-text').innerText = "Informasi lokasi tidak tersedia.";
-                    break;
-                case error.TIMEOUT:
-                    document.getElementById('lokasi-text').innerText = "Permintaan untuk mendapatkan lokasi pengguna timed out.";
-                    break;
-                case error.UNKNOWN_ERROR:
-                    document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
-                    break;
-                default:
-                    document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
-                    break;
-            }
-        }
-
-        async function updatePrayerAndCountdown() {
+        async function main() {
             const prayerTimes = await fetchPrayerTimes();
             updatePrayerTimes(prayerTimes);
             updateCountdown(prayerTimes);
+            setInterval(function () {
+                updateCountdown(prayerTimes);
+            }, 1000);
         }
 
-        setInterval(updatePrayerAndCountdown, 1000);
-
-        getLocation();
+        main();
     </script>
 </body>
 </html>
+
