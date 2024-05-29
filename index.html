@@ -264,6 +264,64 @@
 
         main();
     </script>
+<script>
+    async function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(showPosition, showError);
+        } else {
+            document.getElementById('lokasi-text').innerText = "Geolocation tidak didukung oleh browser Anda.";
+        }
+    }
+
+    async function showPosition(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+        const locationName = await getLocationName(latitude, longitude);
+        document.getElementById('lokasi-text').innerText = locationName;
+        showMap(latitude, longitude);
+    }
+
+    async function getLocationName(latitude, longitude) {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+        const data = await response.json();
+        return data.display_name || `Latitude: ${latitude}, Longitude: ${longitude}`;
+    }
+
+    function showMap(latitude, longitude) {
+        const map = L.map('map').setView([latitude, longitude], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        L.marker([latitude, longitude]).addTo(map)
+            .bindPopup('Lokasi Anda')
+            .openPopup();
+    }
+
+    function showError(error) {
+        switch (error.code) {
+            case error.PERMISSION_DENIED:
+                document.getElementById('lokasi-text').innerText = "Pengguna menolak permintaan geolocation.";
+                break;
+            case error.POSITION_UNAVAILABLE:
+                document.getElementById('lokasi-text').innerText = "Informasi lokasi tidak tersedia.";
+                break;
+            case error.TIMEOUT:
+                document.getElementById('lokasi-text').innerText = "Permintaan untuk mendapatkan lokasi pengguna timed out.";
+                break;
+            case error.UNKNOWN_ERROR:
+                document.getElementById('lokasi-text').innerText = "Terjadi kesalahan yang tidak diketahui.";
+                break;
+        }
+    }
+
+    async function main() {
+        await getLocation();
+    }
+
+    main();
+</script>
 </body>
 </html>
 
